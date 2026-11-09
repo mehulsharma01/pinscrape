@@ -1,0 +1,22 @@
+{
+    "actorSpecification": 1,
+    "name": "pinscrape",
+    "title": "Pinterest Search (Glimsera)",
+    "description": "Search Pinterest pins by keyword: image and video URLs, titles, saves and source links. Optionally stores the image/video files. No login.",
+    "version": "1.0",
+    "buildTag": "latest",
+    "input": "./input_schema.json",
+    "dockerfile": "../Dockerfile",
+    "storages": {
+        "dataset": {
+            "actorSpecification": 1,
+            "views": {
+                "overview": {
+                    "title": "Pins",
+                    "transformation": { "fields": ["query", "rank", "title", "url", "imageUrl", "isVideo", "saves", "pinner", "domain"] },
+                    "display": { "component": "table", "properties": { "url": { "format": "link" }, "imageUrl": { "format": "image" } } }
+                }
+            }
+        }
+    }
+}

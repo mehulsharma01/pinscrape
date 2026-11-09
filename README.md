@@ -1,42 +1,36 @@
-# pinscrape
+# Pinterest Search (Glimsera)
 
-<p style="text-align: center">
-    <img src="image/banner.png" alt="Logo" width="80%">
-</p>
+Apify actor that searches Pinterest by keyword without logging in and returns each pin's image URL, video URL, title, saves, pinner and source link. Built for Glimsera content research and carousel design.
 
-[![built with Python3](https://img.shields.io/badge/built%20with-Python3.6+-red.svg)](https://www.python.org/)
+## Input
 
-### This package can be used to scrape images from pinterest just by using any search keywords. Install it just by using <br><br>
-`pip install pinscrape`
-
-### How to use?
-```python
-from pinscrape import scraper, Pinterest
-
-
-keyword = "messi"
-output_folder = "output"
-proxies = {}
-number_of_workers = 10
-images_to_download = 1
-
-def using_search_engine(): # This is deprecated now
-    details = scraper.scrape(keyword, output_folder, proxies, number_of_workers, images_to_download, sleep_time=2)
-    if details["isDownloaded"]:
-        print("\nDownloading completed !!")
-        print(f"\nTotal urls found: {len(details['extracted_urls'])}")
-        print(f"\nTotal images downloaded (including duplicate images): {len(details['urls_list'])}")
-        print(details)
-    else:
-        print("\nNothing to download !!", details)
-
-
-def using_pinterest_apis():
-    p = Pinterest(proxies=proxies, sleep_time=2) # you can also pass `user_agent` here.
-    images_url = p.search(keyword, images_to_download)
-    p.download(url_list=images_url, number_of_workers=number_of_workers, output_folder=output_folder)
-    board_details = p.get_pin_details(username='canva', board='design-trends')
-    # you can now check any board details of a user.
-    print(board_details)
-    print(board_details.get('resource_response', {}).get('data', {}).get('created_at'))
+```json
+{
+  "queries": ["christmas nails classy", "cherry cola hair"],
+  "maxPinsPerQuery": 30,
+  "saveImages": true,
+  "saveVideos": false,
+  "proxyConfiguration": { "useApifyProxy": true, "apifyProxyGroups": ["RESIDENTIAL"] }
+}
 ```
+
+## Output row
+
+`query`, `rank`, `id`, `url`, `title`, `description`, `imageUrl`, `width`, `height`, `isVideo`, `videoUrl`, `saves`, `pinner`, `board`, `domain`, `link`, `createdAt`, `files`.
+
+## Saved files
+
+With **Save images** / **Save videos**, each file is stored in the run's key-value store in 190 KB parts: `PIN_<id>.p0`, `PIN_<id>.p1`, ... (videos: `PINV_<id>.pN`). The row's `files` entry lists `key`, `parts`, `contentType` and `bytes`. Join the parts in order to get the original file. The parts are small so tools with a ~256 KB read limit can fetch them.
+
+## How it works
+
+It loads the public search page for cookies, then calls Pinterest's `BaseSearchResource` endpoint the same way pinterest.com does, paging with bookmarks. A blocked search is retried on a new IP. Set **Probe responses (debug)** to save a short report if Pinterest changes its responses.
+
+## Development
+
+```bash
+npm install
+npm test
+```
+
+This repo used to contain the `pinscrape` Python package, which has no Apify entry point. It is still in the git history.

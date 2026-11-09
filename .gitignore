@@ -1,13 +1,3 @@
+node_modules/
+storage/
 .vscode
-.pytest_cache
-build
-dist
-pinscrape.egg-info
-**/__pycache__/*
-*.pyc
-**/*.pyc
-**/pinscrape/*.pyc
-venv
-output
-.idea
-data

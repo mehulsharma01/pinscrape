@@ -1,0 +1,53 @@
+{
+    "title": "Pinterest Search input",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "queries": {
+            "title": "Search terms",
+            "type": "array",
+            "description": "One Pinterest search per line, e.g. \"christmas nails classy\".",
+            "editor": "stringList",
+            "prefill": ["christmas nails classy"]
+        },
+        "maxPinsPerQuery": {
+            "title": "Max pins per search",
+            "type": "integer",
+            "default": 30,
+            "minimum": 1,
+            "maximum": 250
+        },
+        "saveImages": {
+            "title": "Save images",
+            "type": "boolean",
+            "description": "Stores each pin's full-size image in the key-value store as PIN_<id>.p0, .p1 ... (190 KB chunks; join them in order).",
+            "default": false
+        },
+        "saveVideos": {
+            "title": "Save videos",
+            "type": "boolean",
+            "description": "Stores each video pin's MP4 as PINV_<id>.p0, .p1 ... (190 KB chunks).",
+            "default": false
+        },
+        "proxyConfiguration": {
+            "title": "Proxy",
+            "type": "object",
+            "editor": "proxy",
+            "default": { "useApifyProxy": true, "apifyProxyGroups": ["RESIDENTIAL"] },
+            "prefill": { "useApifyProxy": true, "apifyProxyGroups": ["RESIDENTIAL"] }
+        },
+        "maxRetries": {
+            "title": "Retries per request",
+            "type": "integer",
+            "default": 3,
+            "minimum": 0,
+            "maximum": 10
+        },
+        "debugProbe": {
+            "title": "Probe responses (debug)",
+            "type": "boolean",
+            "description": "Saves a short report of what Pinterest returned (PROBE record) for the first search, instead of scraping.",
+            "default": false
+        }
+    }
+}
