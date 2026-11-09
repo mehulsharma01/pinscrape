@@ -8,14 +8,17 @@
             "type": "array",
             "description": "One Pinterest search per line, e.g. \"christmas nails classy\".",
             "editor": "stringList",
-            "prefill": ["christmas nails classy"]
+            "prefill": [
+                "christmas nails classy"
+            ]
         },
         "maxPinsPerQuery": {
             "title": "Max pins per search",
             "type": "integer",
             "default": 30,
             "minimum": 1,
-            "maximum": 250
+            "maximum": 250,
+            "description": "How many pins to collect for each search term."
         },
         "saveImages": {
             "title": "Save images",
@@ -33,15 +36,27 @@
             "title": "Proxy",
             "type": "object",
             "editor": "proxy",
-            "default": { "useApifyProxy": true, "apifyProxyGroups": ["RESIDENTIAL"] },
-            "prefill": { "useApifyProxy": true, "apifyProxyGroups": ["RESIDENTIAL"] }
+            "default": {
+                "useApifyProxy": true,
+                "apifyProxyGroups": [
+                    "RESIDENTIAL"
+                ]
+            },
+            "prefill": {
+                "useApifyProxy": true,
+                "apifyProxyGroups": [
+                    "RESIDENTIAL"
+                ]
+            },
+            "description": "Pinterest blocks many datacenter IPs; Residential works best."
         },
         "maxRetries": {
             "title": "Retries per request",
             "type": "integer",
             "default": 3,
             "minimum": 0,
-            "maximum": 10
+            "maximum": 10,
+            "description": "How many times to retry a blocked search with a new IP."
         },
         "debugProbe": {
             "title": "Probe responses (debug)",
