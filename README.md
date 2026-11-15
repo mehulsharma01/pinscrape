@@ -16,7 +16,11 @@ Apify actor that searches Pinterest by keyword without logging in and returns ea
 
 ## Output row
 
-`query`, `rank`, `id`, `url`, `title`, `description`, `imageUrl`, `width`, `height`, `isVideo`, `videoUrl`, `saves`, `pinner`, `board`, `domain`, `link`, `createdAt`, `files`.
+`query`, `rank`, `id`, `url`, `title`, `description`, `imageUrl`, `width`, `height`, `isVideo`, `videoUrl`, `videoHlsUrl`, `saves`, `pinner`, `board`, `domain`, `link`, `createdAt`, `files`.
+
+## Video links
+
+`videoUrl` is a direct MP4 (720p when available), ready to download or hand to a scheduler such as Buffer. Many video pins only list HLS streams; for those the actor derives the matching `/720p/…mp4` link and keeps it only if it actually downloads. Newer uploads often exist only as HLS: they keep `videoUrl: null` and the stream in `videoHlsUrl` (convert with `ffmpeg -i <videoHlsUrl> -c copy out.mp4`). The `SUMMARY` record counts `videoPins` and `videoPinsWithMp4`.
 
 ## Saved files
 

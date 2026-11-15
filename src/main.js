@@ -5,7 +5,7 @@
 import { Actor, log } from 'apify';
 import { gotScraping } from 'got-scraping';
 import { CookieJar } from 'tough-cookie';
-import { buildSearchRequest, parseSearchResponse, normalizePin, chunk } from './parse.js';
+import { buildSearchRequest, parseSearchResponse, normalizePin, chunk, mp4FromHls } from './parse.js';
 
 const BASE = 'https://www.pinterest.com';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -109,6 +109,23 @@ try {
         throw lastErr;
     }
 
+    /** True if the URL answers a 1 KB range request (used to confirm MP4s derived from HLS). */
+    async function urlWorks(session, url) {
+        try {
+            const res = await gotScraping({
+                url,
+                proxyUrl: session.proxyUrl,
+                timeout: { request: 20000 },
+                throwHttpErrors: false,
+                responseType: 'buffer',
+                headers: { range: 'bytes=0-1023' },
+            });
+            return res.statusCode === 200 || res.statusCode === 206;
+        } catch {
+            return false;
+        }
+    }
+
     /** Download a file and store it as KEY.p0, KEY.p1 ... Returns a files[] entry or null. */
     async function saveFile(session, url, key) {
         try {
@@ -148,7 +165,7 @@ try {
         await Actor.exit('Probe saved to key-value store record PROBE.');
     }
 
-    const stats = { queriesOk: 0, pinsSaved: 0, filesSaved: 0, failed: [] };
+    const stats = { queriesOk: 0, pinsSaved: 0, filesSaved: 0, videoPins: 0, videoPinsWithMp4: 0, failed: [] };
     for (const [qi, query] of queries.entries()) {
         await Actor.setStatusMessage(`Search ${qi + 1}/${queries.length}: "${query}"`);
         try {
@@ -158,6 +175,10 @@ try {
                 const row = normalizePin(raw, query, ++rank);
                 if (!row) continue;
                 row.files = [];
+                // Pins that only list HLS get a derived 720p MP4 link; newer uploads have no MP4 copy, so check it.
+                if (row.videoHlsUrl && row.videoUrl === mp4FromHls(row.videoHlsUrl) && !(await urlWorks(session, row.videoUrl))) {
+                    row.videoUrl = null;
+                }
                 if (input.saveImages && row.imageUrl) {
                     const f = await saveFile(session, row.imageUrl, `PIN_${row.id}`);
                     if (f) row.files.push(f);
@@ -166,6 +187,8 @@ try {
                     const f = await saveFile(session, row.videoUrl, `PINV_${row.id}`);
                     if (f) row.files.push(f);
                 }
+                if (row.isVideo) stats.videoPins += 1;
+                if (row.videoUrl) stats.videoPinsWithMp4 += 1;
                 stats.filesSaved += row.files.length;
                 await Actor.pushData(row);
                 stats.pinsSaved += 1;

@@ -25,7 +25,12 @@ export function buildSearchRequest(query, { pageSize = 25, bookmark = null, base
     return { sourceUrl, url, pageUrl: `${base}${sourceUrl}` };
 }
 
-/** Pick the best MP4 from a pin's videos.video_list (prefer 720p). */
+/**
+ * Pick the best MP4 from a pin's videos.video_list (prefer 720p).
+ * Many pins (idea/story pins) only list HLS streams (V_HLSV3_MOBILE, V_HLSV4...).
+ * Pinterest serves the same video as a progressive MP4 at the matching /720p/ path,
+ * so derive that instead of dropping the video.
+ */
 export function bestVideo(pin) {
     const list = pin?.videos?.video_list || pin?.story_pin_data?.pages?.[0]?.blocks?.find?.((b) => b?.video)?.video?.video_list;
     if (!list) return null;
@@ -33,7 +38,20 @@ export function bestVideo(pin) {
     for (const k of pref) if (list[k]?.url?.endsWith?.('.mp4')) return list[k].url;
     const mp4 = Object.values(list).filter((v) => typeof v?.url === 'string' && v.url.includes('.mp4'))
         .sort((a, b) => (b.width || 0) - (a.width || 0));
-    return mp4[0]?.url || null;
+    if (mp4[0]?.url) return mp4[0].url;
+    return mp4FromHls(hlsUrl(list));
+}
+
+/** First HLS (.m3u8) stream URL in a video_list, or null. */
+export function hlsUrl(list) {
+    const hls = Object.values(list || {}).find((v) => typeof v?.url === 'string' && /\.m3u8(\?|$)/.test(v.url));
+    return hls?.url || null;
+}
+
+/** https://v1.pinimg.com/videos/iht/hls/aa/bb/cc/<hash>.m3u8 -> .../videos/iht/720p/aa/bb/cc/<hash>.mp4 */
+export function mp4FromHls(url) {
+    if (typeof url !== 'string' || !/\/hls\//.test(url)) return null;
+    return url.replace(/\/hls\//, '/720p/').replace(/\.m3u8(\?.*)?$/, '.mp4');
 }
 
 /** Largest image from pin.images (orig preferred). */
@@ -65,6 +83,7 @@ export function normalizePin(pin, query, rank) {
         height: img?.height ?? null,
         isVideo: Boolean(videoUrl || pin.videos),
         videoUrl,
+        videoHlsUrl: hlsUrl(pin?.videos?.video_list || pin?.story_pin_data?.pages?.[0]?.blocks?.find?.((b) => b?.video)?.video?.video_list),
         saves,
         pinner: pin.pinner?.username ?? null,
         pinnerName: pin.pinner?.full_name ?? null,

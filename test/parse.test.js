@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSearchRequest, parseSearchResponse, normalizePin, bestVideo, bestImage, chunk, CHUNK_BYTES } from '../src/parse.js';
+import { buildSearchRequest, parseSearchResponse, normalizePin, bestVideo, bestImage, chunk, CHUNK_BYTES, mp4FromHls } from '../src/parse.js';
 
 test('buildSearchRequest encodes query, source_url and bookmark', () => {
     const r = buildSearchRequest('christmas nails', { bookmark: 'BM1' });
@@ -63,4 +63,16 @@ test('chunk splits into 190000-byte parts that rejoin exactly', () => {
     assert.equal(parts.length, 3);
     assert.equal(parts[2].length, 5);
     assert.ok(Buffer.concat(parts).equals(buf));
+});
+
+test('bestVideo derives a 720p mp4 when a pin only has HLS streams', () => {
+    const hls = 'https://v1.pinimg.com/videos/iht/hls/78/e7/62/78e762a26104499a83b1de8d09e730ab.m3u8';
+    const v = { videos: { video_list: { V_HLSV3_MOBILE: { url: hls } } } };
+    assert.equal(bestVideo(v), 'https://v1.pinimg.com/videos/iht/720p/78/e7/62/78e762a26104499a83b1de8d09e730ab.mp4');
+    const row = normalizePin({ ...pin, videos: v.videos }, 'q', 1);
+    assert.equal(row.isVideo, true);
+    assert.equal(row.videoHlsUrl, hls);
+    assert.ok(row.videoUrl.endsWith('.mp4'));
+    assert.equal(mp4FromHls('https://example.com/a.m3u8'), null);
+    assert.equal(mp4FromHls(null), null);
 });
