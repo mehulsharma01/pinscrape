@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSearchRequest, parseSearchResponse, normalizePin, bestVideo, bestImage, chunk, CHUNK_BYTES, mp4FromHls } from '../src/parse.js';
+import { buildSearchRequest, parseSearchResponse, normalizePin, bestVideo, bestImage, chunk, CHUNK_BYTES, mp4FromHls, sumReactions } from '../src/parse.js';
 
 test('buildSearchRequest encodes query, source_url and bookmark', () => {
     const r = buildSearchRequest('christmas nails', { bookmark: 'BM1' });
@@ -75,4 +75,16 @@ test('bestVideo derives a 720p mp4 when a pin only has HLS streams', () => {
     assert.ok(row.videoUrl.endsWith('.mp4'));
     assert.equal(mp4FromHls('https://example.com/a.m3u8'), null);
     assert.equal(mp4FromHls(null), null);
+});
+
+test('reactions come from reaction_counts; saves stay null when Pinterest omits them', () => {
+    assert.equal(sumReactions({ 1: 335 }), 335);
+    assert.equal(sumReactions({ 1: 10, 5: 2 }), 12);
+    assert.equal(sumReactions({}), 0);
+    assert.equal(sumReactions(undefined), null);
+    const row = normalizePin({ ...pin, aggregated_pin_data: { node_id: 'x' }, reaction_counts: { 1: 3765 } }, 'q', 1);
+    assert.equal(row.reactions, 3765);
+    assert.equal(row.saves, null);
+    const old = normalizePin({ ...pin, aggregated_pin_data: { aggregated_stats: { saves: 42 } } }, 'q', 1);
+    assert.equal(old.saves, 42);
 });

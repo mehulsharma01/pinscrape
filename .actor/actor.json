@@ -13,7 +13,7 @@
             "views": {
                 "overview": {
                     "title": "Pins",
-                    "transformation": { "fields": ["query", "rank", "title", "url", "imageUrl", "isVideo", "saves", "pinner", "domain"] },
+                    "transformation": { "fields": ["query", "rank", "title", "url", "imageUrl", "isVideo", "reactions", "saves", "pinner", "domain"] },
                     "display": { "component": "table", "properties": { "url": { "format": "link" }, "imageUrl": { "format": "image" } } }
                 }
             }

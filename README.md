@@ -16,7 +16,11 @@ Apify actor that searches Pinterest by keyword without logging in and returns ea
 
 ## Output row
 
-`query`, `rank`, `id`, `url`, `title`, `description`, `imageUrl`, `width`, `height`, `isVideo`, `videoUrl`, `videoHlsUrl`, `saves`, `pinner`, `board`, `domain`, `link`, `createdAt`, `files`.
+`query`, `rank`, `id`, `url`, `title`, `description`, `imageUrl`, `width`, `height`, `isVideo`, `videoUrl`, `videoHlsUrl`, `saves`, `reactions`, `pinner`, `board`, `domain`, `link`, `createdAt`, `files`.
+
+## Popularity: saves vs reactions
+
+Pinterest stopped returning save counts to logged-out visitors (search results, pin pages and the pin resource all omit them), so `saves` is usually `null`. `reactions` is the pin's like/reaction total from search results and is the popularity number to sort by. `saves` is still filled whenever Pinterest includes it.
 
 ## Video links
 

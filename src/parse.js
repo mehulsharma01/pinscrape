@@ -64,12 +64,24 @@ export function bestImage(pin) {
     return null;
 }
 
+/**
+ * Total reactions (likes) from pin.reaction_counts, e.g. { "1": 335 } -> 335.
+ * Logged-out search no longer returns save counts (aggregated_stats is empty since 2026),
+ * so this is the popularity signal that is still available. null when Pinterest omits it.
+ */
+export function sumReactions(rc) {
+    if (!rc || typeof rc !== 'object') return null;
+    const nums = Object.values(rc).map(Number).filter((n) => Number.isFinite(n));
+    return nums.length ? nums.reduce((a, b) => a + b, 0) : 0;
+}
+
 /** One search result object -> dataset row (null for ads/non-pins). */
 export function normalizePin(pin, query, rank) {
     if (!pin || !pin.id || (pin.type && pin.type !== 'pin')) return null;
     const img = bestImage(pin);
     const videoUrl = bestVideo(pin);
     const saves = pin.aggregated_pin_data?.aggregated_stats?.saves ?? pin.repin_count ?? null;
+    const reactions = sumReactions(pin.reaction_counts);
     const created = pin.created_at ? new Date(pin.created_at) : null;
     return {
         query,
@@ -85,6 +97,7 @@ export function normalizePin(pin, query, rank) {
         videoUrl,
         videoHlsUrl: hlsUrl(pin?.videos?.video_list || pin?.story_pin_data?.pages?.[0]?.blocks?.find?.((b) => b?.video)?.video?.video_list),
         saves,
+        reactions,
         pinner: pin.pinner?.username ?? null,
         pinnerName: pin.pinner?.full_name ?? null,
         board: pin.board?.name ?? null,
